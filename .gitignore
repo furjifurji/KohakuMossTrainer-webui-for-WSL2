@@ -72,3 +72,7 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# documentation & notes (local only)
+WSL_TRAINER_WEBUI_GUIDE.md
+*.guide.md
+
