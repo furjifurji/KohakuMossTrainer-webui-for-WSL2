@@ -46,9 +46,13 @@ def _raw(col, n: int) -> bytes:
     """The first `n` elements of a fixed-width column as raw bytes (one range read)."""
     if n == 0:
         return b""
-    return bytes(
-        col._inner.read_range(col._col_id, 0, n, col._elem_size, col._chunk_bytes)
-    )
+    inner = col._inner
+    if hasattr(inner, "read_range"):
+        return bytes(
+            inner.read_range(col._col_id, 0, n, col._elem_size, col._chunk_bytes)
+        )
+    # kohakuvault 1.0.x: no read_range; read_fixed returns the same raw bytes.
+    return bytes(inner.read_fixed(col._col_id, 0, n))
 
 
 def is_catalog_vault(path: str) -> bool:

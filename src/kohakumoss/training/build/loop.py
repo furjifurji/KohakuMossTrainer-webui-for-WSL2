@@ -17,6 +17,7 @@ from kohakumoss.training.build.objective import build_loss, is_masked
 from kohakumoss.training.build.pipelines import filter_groups
 from kohakumoss.training.callbacks import (
     CallbackRunner,
+    ExportLoRA,
     InstabilityDump,
     LogMetrics,
     SampleGrid,
@@ -324,6 +325,7 @@ def build_callbacks(
     checkpoints,
     parts,
     *,
+    export_lora=None,
     reduce_loss=None,
     autocast=contextlib.nullcontext,
     timeline=NoTimeline(),
@@ -409,6 +411,8 @@ def build_callbacks(
         cbs.append(NonFiniteGuard(k["NONFINITE_PATIENCE"], floor, dump, record, forget))
     if is_main and shown:
         cbs.append(ProgressBar(k["STEPS"], device, timeline, device_use))
+    if int(k.get("EXPORT_EVERY") or 0) > 0 and export_lora:
+        cbs.append(ExportLoRA(int(k["EXPORT_EVERY"]), export_lora))
     if k["SAVE_EVERY"] > 0:
         cbs.append(SaveCheckpoint(k["SAVE_EVERY"], checkpoints, parts))
     if k["SAVE_MINUTES"] > 0:

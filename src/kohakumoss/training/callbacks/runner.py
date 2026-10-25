@@ -71,6 +71,17 @@ class SaveCheckpoint:
         self.checkpoints.save(state.step, self.parts(state))
 
 
+class ExportLoRA:
+    """Every `every` steps: export standalone LoRA files without writing optimizer checkpoints."""
+
+    def __init__(self, every: int, on_export):
+        self.every = every
+        self.on_export = on_export
+
+    def on_step_end(self, state: TrainState, out) -> None:
+        self.on_export(state.step)
+
+
 class MeetRanks:
     """Every `every` steps, after rank-0-only work of that cadence (the sample grid):
     every rank calls `meet(what)` (a store barrier, `launch.ranks_meet`), so the peers

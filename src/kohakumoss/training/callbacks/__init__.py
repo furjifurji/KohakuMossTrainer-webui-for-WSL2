@@ -14,12 +14,14 @@ from kohakumoss.training.callbacks.monitor import (
 )
 from kohakumoss.training.callbacks.runner import (
     CallbackRunner,
+    ExportLoRA,
     SaveCheckpoint,
     TimedCheckpoint,
 )
 
 __all__ = [
     "CallbackRunner",
+    "ExportLoRA",
     "FixedSigma",
     "InstabilityDump",
     "LogMetrics",

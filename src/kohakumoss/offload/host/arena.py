@@ -88,7 +88,10 @@ def arena_bytes(sizes: Sequence[int], kind: str, chunk: int = CHUNK) -> int:
 
 def pinned_empty(nbytes: int) -> Tensor:
     """A pinned uint8 host buffer from the caching host allocator."""
-    return torch.empty(nbytes, dtype=torch.uint8, pin_memory=True)
+    try:
+        return torch.empty(nbytes, dtype=torch.uint8, pin_memory=True)
+    except (torch.AcceleratorError, RuntimeError):
+        return torch.empty(nbytes, dtype=torch.uint8, pin_memory=False)
 
 
 def _unregister(buf: Tensor, device: torch.device) -> None:

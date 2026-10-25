@@ -73,6 +73,7 @@ from kohakumoss.training.exports import (
     export_files,
     fused_qkv,
     log_export_plan,
+    write_exports,
 )
 from kohakumoss.training.knobs import check, default_device_type, is_full, run_name
 from kohakumoss.training.layouts import Layout, layout_of
@@ -312,6 +313,25 @@ def worker(k: dict, rank: int = 0, world: int = 1, device=None) -> TrainState:
     ckpt = build_checkpoints(k, output_dir, ema, is_main, writer, rank, rng_devices)
     parts = _parts(ctx, (ema, bundle, step, loader), names)
     ckpt.after_save = checkpoint_exports(k, layout, built, parts, is_main)
+
+    def on_export_lora(step_num: int) -> None:
+        if k["SAVE_FORMAT"] == "none":
+            return
+        parts.before_export()
+        with layout.full_weights(built.backbone):
+            if is_main:
+                meta = {"kohakumoss_step": str(step_num), "kohakumoss_algo": str(k["ALGO"])}
+                root = Path(output_dir) / "loras"
+                run = f"{run_name(k)}_step{step_num:08d}"
+                all_files = export_files(k, fused_qkv(k))
+                files = (
+                    [f for f in all_files if f.fmt in ("comfy", "lycoris")]
+                    if k["ALGO"] != "full"
+                    else all_files
+                )
+                for path in write_exports(files, built.trainable, built.backbone, root, run, meta):
+                    log.info(f"exported standalone LoRA: {path}")
+
     rank_cbs = _rank_callbacks(ctx, [hooks.timing, *sources], share, traced)
     runner = build_callbacks(
         ctx,
@@ -321,6 +341,7 @@ def worker(k: dict, rank: int = 0, world: int = 1, device=None) -> TrainState:
         val_batches,
         ckpt,
         parts,
+        export_lora=on_export_lora,
         reduce_loss=hooks.reduce_loss,
         autocast=autocast,
         timeline=timeline,
@@ -446,6 +467,13 @@ def checkpoint_exports(k: dict, layout: Layout, built, parts, is_main: bool):
     def after_save(step: int, path: Path | None) -> None:
         root = (path or Path()) / "export"
         export_into(k, layout, built, parts, step, root, is_main)
+        if is_main and path and path.exists() and int(k.get("EXPORT_EVERY") or 0) <= 0:
+            import shutil
+            loras_dir = path.parent.parent / "loras"
+            loras_dir.mkdir(parents=True, exist_ok=True)
+            for f in root.glob("*.safetensors"):
+                dest = loras_dir / f"{f.stem}_step{step:08d}{f.suffix}"
+                shutil.copy2(f, dest)
 
     return after_save
 

@@ -40,6 +40,14 @@ PROFILES: dict[str, dict] = {
         optim_state="gpu",
         fused_step=False,
     ),
+    "ckpt-resident": dict(
+        checkpoint="block",
+        act_offload=False,
+        base_precision="auto",
+        stream="off",
+        optim_state="gpu",
+        fused_step=False,
+    ),
     "balanced": dict(
         checkpoint="block",
         act_offload=False,
@@ -69,7 +77,7 @@ PROFILES: dict[str, dict] = {
         grad_offload=True,
     ),
 }
-ORDER = ("speed", "balanced", "low", "minimal")
+ORDER = ("speed", "ckpt-resident", "balanced", "low", "minimal")
 
 
 def checkpoint_mode(value: str) -> tuple[str, float]:

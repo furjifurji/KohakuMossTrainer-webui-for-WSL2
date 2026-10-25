@@ -222,7 +222,8 @@ VALIDATE_EVERY = 0  # steps; 0 = off
 VALIDATION = {}  # {"datasets": [...], "sigmas": [...], "seed": 0}
 
 # ===================== CHECKPOINT / EXPORT =====================
-SAVE_EVERY = 500  # steps; 0 = off
+SAVE_EVERY = 500  # full checkpoint (optim.pt + state) every N steps; 0 = off
+EXPORT_EVERY = 0  # standalone LoRA export every N steps; 0 = off (or only at checkpoint/end)
 SAVE_MINUTES = (
     0  # also a checkpoint every N minutes (checked every LOG_EVERY steps); 0 = off
 )

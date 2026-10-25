@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KohakuMoss Trainer Studio</title>
+  <meta name="description" content="KohakuMoss MOSS-Image LoRA / LyCORIS 训练控制台">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>🌙 KohakuMoss</h1>
+      <span class="sub" data-tip="MOSS-Image LoRA / LyCORIS 训练器">Trainer Studio</span>
+    </div>
+    <div class="side-actions">
+      <button id="btn-new" class="btn btn-primary btn-sm" data-tip="新建一个训练配置并保存为预设，自动加入下方列表">+ New</button>
+      <button id="btn-save" class="btn btn-secondary btn-sm" data-tip="保存当前配置（保存至 webui_app/presets/ 并在下方列表显示）">💾 Save</button>
+    </div>
+    <div id="preset-list" class="preset-list"></div>
+    <div class="preset-dir-hint" data-tip="所有配置预设均保存在项目目录下的 webui_app/presets 文件夹内">
+      📁 预设位置: <code>webui_app/presets/</code>
+    </div>
+    <div class="sidebar-footer">
+      <div id="conn" class="conn bad"><span class="dot"></span><span id="conn-text">正在连接服务…</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="editor-header">
+      <div>
+        <h2 id="title">Untitled</h2>
+        <div id="summary" class="summary"></div>
+      </div>
+      <div class="editor-actions">
+        <button id="btn-theme" class="btn btn-secondary" data-tip="切换浅色 / 深色主题">☀️ 浅色主题</button>
+        <button id="btn-probe" class="btn btn-secondary" data-tip="Dataset Scan：扫描数据集并计算每个 epoch 的步数与分桶分布">🔍 Scan Dataset</button>
+        <button id="btn-doctor" class="btn btn-secondary" data-tip="Doctor：检查 GPU / 依赖环境是否正常">🩺 Doctor</button>
+        <button id="btn-preview" class="btn btn-secondary" data-tip="Preview Config：预览将要生成的 KohakuMoss 配置文件">📄 Config</button>
+        <button id="btn-train" class="btn btn-primary" data-tip="Train：自动完成数据扫描→文本/Latent 缓存→开始训练">▶ Train</button>
+        <button id="btn-stop" class="btn btn-danger hidden" data-tip="Stop：终止当前任务">⏹ Stop</button>
+      </div>
+    </header>
+
+    <nav id="tabs" class="tabs"></nav>
+    <div id="panes" class="tab-content"></div>
+  </main>
+</div>
+<div id="tooltip" class="tooltip hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
