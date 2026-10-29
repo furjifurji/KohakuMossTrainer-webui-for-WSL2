@@ -81,11 +81,17 @@ class Runner:
                 self.progress["lr"] = m_lr.group(1)
 
             now = time.time()
-            if self._last_step_time > 0:
+            if self._last_step_time > 0 and getattr(self, "_last_step_num", 0) > 0 and step > self._last_step_num:
+                d_steps = step - self._last_step_num
+                dt = now - self._last_step_time
+                if dt > 0:
+                    self.progress["speed"] = f"{dt / d_steps:.2f} s/it"
+            elif self._last_step_time > 0:
                 dt = now - self._last_step_time
                 if dt > 0:
                     self.progress["speed"] = f"{dt:.2f} s/it"
             self._last_step_time = now
+            self._last_step_num = step
 
             if step > 0 and self.started > 0:
                 elapsed = now - self.started
@@ -145,6 +151,22 @@ class Runner:
         env["VIRTUAL_ENV"] = str(PROJECT_DIR / ".venv")
         env["PYTHONUNBUFFERED"] = "1"
         env["PYTHONPATH"] = str(PROJECT_DIR) + os.pathsep + env.get("PYTHONPATH", "")
+
+        # Auto-inject nvidia libraries (cuDNN, cuBLAS, etc.) into LD_LIBRARY_PATH
+        # Fixes: RuntimeError: CUDNN_STATUS_SUBLIBRARY_LOADING_FAILED
+        ld_dirs: list[str] = []
+        venv_dir = PROJECT_DIR / ".venv"
+        for sp in venv_dir.glob("lib/python*/site-packages/nvidia"):
+            for sub in ("cudnn/lib", "cublas/lib", "cuda_runtime/lib", "cusparse/lib"):
+                lib_path = sp / sub
+                if lib_path.is_dir():
+                    ld_dirs.append(str(lib_path))
+
+        if ld_dirs:
+            existing_ld = env.get("LD_LIBRARY_PATH", "")
+            all_ld = ld_dirs + ([existing_ld] if existing_ld else [])
+            env["LD_LIBRARY_PATH"] = ":".join(all_ld)
+
         return env
 
     def _run(self, cmd: list[str], capture: bool = False) -> tuple[int, str]:
